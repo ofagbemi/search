@@ -1,5 +1,9 @@
+import uuid from 'uuid';
+import groupBy from 'lodash/groupBy';
+
 const imageResults = [
   {
+    id: uuid.v4(),
     type: 'image',
     url: 'images/breakfast.jpeg',
     name: 'breakfast.jpeg',
@@ -9,6 +13,7 @@ const imageResults = [
     app: 'preview',
   },
   {
+    id: uuid.v4(),
     type: 'image',
     url: 'images/greenwich.jpeg',
     name: 'greenwich.jpeg',
@@ -18,6 +23,7 @@ const imageResults = [
     app: 'preview',
   },
   {
+    id: uuid.v4(),
     type: 'image',
     url: 'images/joshua_tree.jpeg',
     name: 'joshua_tree.jpeg',
@@ -30,6 +36,7 @@ const imageResults = [
 
 const applicationResults = [
   {
+    id: uuid.v4(),
     type: 'application',
     size: 181200000,
     app: 'slack',
@@ -40,6 +47,7 @@ const applicationResults = [
     last_opened: '2018-02-21T18:43:27.598Z',
   },
   {
+    id: uuid.v4(),
     type: 'application',
     size: 181200000,
     app: 'lingo',
@@ -50,6 +58,7 @@ const applicationResults = [
     last_opened: '2018-01-01T18:43:27.598Z',
   },
   {
+    id: uuid.v4(),
     type: 'application',
     size: 181200000,
     app: 'preview',
@@ -60,6 +69,7 @@ const applicationResults = [
     last_opened: '2018-01-19T18:43:27.598Z',
   },
   {
+    id: uuid.v4(),
     type: 'application',
     size: 181200000,
     app: 'xcode',
@@ -73,6 +83,7 @@ const applicationResults = [
 
 const developerFileResults = [
   {
+    id: uuid.v4(),
     type: 'developerFile',
     size: 19827,
     name: 'test.py',
@@ -112,11 +123,20 @@ export function getApps() {
   return new Promise(resolve => resolve(apps));
 }
 
+/**
+ *
+ * @param {string} query
+ * @returns a promise that resolves with an array of section objects,
+ * each of the shape
+ * {
+ *   section: string,
+ *   results: Array<Object>,
+ * }
+ */
 export function getResults(query) {
   return new Promise(resolve => {
-    const resultGroups = {};
     if (!query) {
-      return resolve(resultGroups);
+      return resolve({});
     }
 
     const matchingResults = allResults
@@ -129,20 +149,21 @@ export function getResults(query) {
       matchingResults.shift(),
       matchingResults.shift(),
       matchingResults.shift(),
-    ].filter(Boolean);
+    ].filter(r => r !== undefined);
 
-    for (const result of matchingResults) {
-      const type = result.type;
-      if (!resultGroups[type]) {
-        resultGroups[type] = [result];
-      } else {
-        resultGroups[type].push(result);
-      }
-    }
+    const resultGroups = groupBy(matchingResults, 'type');
 
     if (topPicks.length) {
       resultGroups.topPicks = topPicks;
     }
-    resolve(resultGroups);
+
+    resolve(
+      Object.keys(resultGroups).map(key => {
+        return {
+          section: key,
+          results: resultGroups[key],
+        };
+      })
+    );
   });
 }
