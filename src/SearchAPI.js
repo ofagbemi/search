@@ -136,7 +136,7 @@ export function getApps() {
 export function getResults(query) {
   return new Promise(resolve => {
     if (!query) {
-      return resolve({});
+      return resolve([]);
     }
 
     const matchingResults = allResults
