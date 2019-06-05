@@ -119,8 +119,18 @@ const apps = {
   },
 };
 
-export function getApps() {
-  return new Promise(resolve => resolve(apps));
+export function getApp(key) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const app = apps[key];
+
+      if (!app) {
+        reject(new Error(`app "${key}" not found`));
+      } else {
+        resolve(app);
+      }
+    }, 200);
+  });
 }
 
 /**
@@ -135,35 +145,39 @@ export function getApps() {
  */
 export function getResults(query) {
   return new Promise(resolve => {
-    if (!query) {
-      return resolve([]);
-    }
+    setTimeout(() => {
+      if (!query) {
+        return resolve([]);
+      }
 
-    const matchingResults = allResults
-      .filter(result => result.name.toLowerCase().includes(query.toLowerCase()))
-      .sort(
-        (a, b) => -1 * (Date.parse(a.last_opened) - Date.parse(b.last_opened))
+      const matchingResults = allResults
+        .filter(result =>
+          result.name.toLowerCase().includes(query.toLowerCase())
+        )
+        .sort(
+          (a, b) => -1 * (Date.parse(a.last_opened) - Date.parse(b.last_opened))
+        );
+
+      const topHits = [
+        matchingResults.shift(),
+        matchingResults.shift(),
+        matchingResults.shift(),
+      ].filter(r => r !== undefined);
+
+      const resultGroups = groupBy(matchingResults, 'type');
+
+      if (topHits.length) {
+        resultGroups.topHits = topHits;
+      }
+
+      resolve(
+        Object.keys(resultGroups).map(key => {
+          return {
+            section: key,
+            results: resultGroups[key],
+          };
+        })
       );
-
-    const topPicks = [
-      matchingResults.shift(),
-      matchingResults.shift(),
-      matchingResults.shift(),
-    ].filter(r => r !== undefined);
-
-    const resultGroups = groupBy(matchingResults, 'type');
-
-    if (topPicks.length) {
-      resultGroups.topPicks = topPicks;
-    }
-
-    resolve(
-      Object.keys(resultGroups).map(key => {
-        return {
-          section: key,
-          results: resultGroups[key],
-        };
-      })
-    );
-  });
+    });
+  }, 400);
 }
